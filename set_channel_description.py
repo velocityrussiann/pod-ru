@@ -1,5 +1,6 @@
 """
-Set the Velocity Russian Podcast YouTube channel description.
+Set the Velocity Russian Podcast YouTube channel description (About section).
+Run once, or whenever the channel description needs updating.
 """
 import os, json
 from pathlib import Path
@@ -10,7 +11,7 @@ from googleapiclient.discovery import build
 
 load_dotenv()
 
-CHANNEL_DESCRIPTION = ""
+CHANNEL_DESCRIPTION = "🎙️ Velocity Russian Podcast - Учите русский язык естественно - с нашим двуязычным подкастом.\n\nLearn Russian naturally - with our bilingual podcast.\n\nДобро пожаловать в двуязычный подкаст. Каждый эпизод — это простая беседа между Анной и Иваном, на уровне A2.\n\n📚 WHAT YOU'LL GET:\n• Daily bilingual conversations\n• Natural pronunciation from native speakers\n• Practical vocabulary for everyday life\n• Short, easy-to-follow episodes\n\n🇷🇺 How to use this podcast:\n1. Слушайте русскую часть и старайтесь понять\n2. Проверьте английский перевод\n3. Повторяйте фразы вслух\n4. Послушайте снова завтра - каждый день становится легче!\n\n🔔 Subscribe and turn on notifications so you never miss a lesson.\n\n📅 New episodes every day!\n\n#LearnRussian #Podcast #Bilingual #LanguageLearning"
 
 
 def _get_creds():
@@ -39,14 +40,17 @@ def main():
     creds = _get_creds()
     creds.refresh(Request())
     service = build("youtube", "v3", credentials=creds)
+
     channels = service.channels().list(part="brandingSettings", mine=True).execute()
     channel_id = channels["items"][0]["id"]
     branding = dict(channels["items"][0]["brandingSettings"])
     branding.setdefault("channel", {})
     branding["channel"]["description"] = CHANNEL_DESCRIPTION
     body = {"id": channel_id, "brandingSettings": branding}
-    service.channels().update(part="brandingSettings", body=body).execute()
-    print("Channel description synced")
+    resp = service.channels().update(part="brandingSettings", body=body).execute()
+    new_desc = resp["brandingSettings"]["channel"].get("description", "")
+    print("Channel:", channel_id)
+    print("Description set to", len(new_desc), "chars")
 
 
 if __name__ == "__main__":
