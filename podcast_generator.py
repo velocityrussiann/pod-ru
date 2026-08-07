@@ -265,8 +265,8 @@ def create_frame(turn, output_path, frame_num=0):
     draw.text((110, header_y), "VELOCITY", fill=WHITE, font=f_title_white, anchor="lm")
     v_bbox = draw.textbbox((110, header_y), "VELOCITY", font=f_title_white, anchor="lm")
     
-    draw.text((v_bbox[2] + 8, header_y), "GERMAN", fill=YELLOW, font=f_title_white, anchor="lm")
-    s_bbox = draw.textbbox((v_bbox[2] + 8, header_y), "GERMAN", font=f_title_white, anchor="lm")
+    draw.text((v_bbox[2] + 8, header_y), "RUSSIAN", fill=YELLOW, font=f_title_white, anchor="lm")
+    s_bbox = draw.textbbox((v_bbox[2] + 8, header_y), "RUSSIAN", font=f_title_white, anchor="lm")
 
     draw.text((s_bbox[2] + 8, header_y), "PODCAST", fill=WHITE, font=f_title_white, anchor="lm")
     p_bbox = draw.textbbox((s_bbox[2] + 8, header_y), "PODCAST", font=f_title_white, anchor="lm")
@@ -299,7 +299,7 @@ def create_frame(turn, output_path, frame_num=0):
 
     draw.text((pill_x + pill_w + 25, pill_y + 26), "govorit", fill=LIGHT_GRAY, font=f_hablando, anchor="lm")
 
-    # === MAIN GERMAN TEXT ===
+    # === MAIN RUSSIAN TEXT ===
 
     # === MAIN TEXT (auto-size, HARD max 3 lines) ===
     russian_text = turn.get("russian", turn.get("spanish", ""))
@@ -601,7 +601,7 @@ def create_video(turns, audio_files, video_dir=None):
 
 async def main():
     print("=" * 60)
-    print("  VELOCITY GERMAN PODCAST")
+    print("  VELOCITY RUSSIAN PODCAST")
     print("=" * 60)
 
     print("\n[1/4] Generating script (150 turns)...")
