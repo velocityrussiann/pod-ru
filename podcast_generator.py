@@ -1,4 +1,4 @@
-"""
+﻿"""
 VELOCITY RUSSIAN PODCAST GENERATOR
 15-min bilingual Russian/English podcast at A2 level
 2 hosts: Anna & Ivan
@@ -26,21 +26,21 @@ VIDEO_HEIGHT = 1080
 FPS = 30
 
 TOPICS = [
-    "Путешествие в новую страну - Traveling to a new country",
-    "Традиционная еда - Traditional food",
-    "Повседневный распорядок - Daily routine",
-    "Праздники и торжества - Holidays and celebrations",
-    "Погода и времена года - Weather and seasons",
-    "Семья и друзья - Family and friends",
-    "Музыка и фильмы - Music and movies",
-    "Спорт и тренировки - Sports and exercise",
-    "Идеальный город - The ideal city",
-    "Изучение языков - Learning languages",
-    "Выходные - The weekend",
-    "Покупки и одежда - Shopping and clothes",
-    "Общественный транспорт - Public transport",
-    "В ресторане - At the restaurant",
-    "Здоровье и благополучие - Health and wellness",
+    "ÐŸÑƒÑ‚ÐµÑˆÐµÑÑ‚Ð²Ð¸Ðµ Ð² Ð½Ð¾Ð²ÑƒÑŽ ÑÑ‚Ñ€Ð°Ð½Ñƒ - Traveling to a new country",
+    "Ð¢Ñ€Ð°Ð´Ð¸Ñ†Ð¸Ð¾Ð½Ð½Ð°Ñ ÐµÐ´Ð° - Traditional food",
+    "ÐŸÐ¾Ð²ÑÐµÐ´Ð½ÐµÐ²Ð½Ñ‹Ð¹ Ñ€Ð°ÑÐ¿Ð¾Ñ€ÑÐ´Ð¾Ðº - Daily routine",
+    "ÐŸÑ€Ð°Ð·Ð´Ð½Ð¸ÐºÐ¸ Ð¸ Ñ‚Ð¾Ñ€Ð¶ÐµÑÑ‚Ð²Ð° - Holidays and celebrations",
+    "ÐŸÐ¾Ð³Ð¾Ð´Ð° Ð¸ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð° Ð³Ð¾Ð´Ð° - Weather and seasons",
+    "Ð¡ÐµÐ¼ÑŒÑ Ð¸ Ð´Ñ€ÑƒÐ·ÑŒÑ - Family and friends",
+    "ÐœÑƒÐ·Ñ‹ÐºÐ° Ð¸ Ñ„Ð¸Ð»ÑŒÐ¼Ñ‹ - Music and movies",
+    "Ð¡Ð¿Ð¾Ñ€Ñ‚ Ð¸ Ñ‚Ñ€ÐµÐ½Ð¸Ñ€Ð¾Ð²ÐºÐ¸ - Sports and exercise",
+    "Ð˜Ð´ÐµÐ°Ð»ÑŒÐ½Ñ‹Ð¹ Ð³Ð¾Ñ€Ð¾Ð´ - The ideal city",
+    "Ð˜Ð·ÑƒÑ‡ÐµÐ½Ð¸Ðµ ÑÐ·Ñ‹ÐºÐ¾Ð² - Learning languages",
+    "Ð’Ñ‹Ñ…Ð¾Ð´Ð½Ñ‹Ðµ - The weekend",
+    "ÐŸÐ¾ÐºÑƒÐ¿ÐºÐ¸ Ð¸ Ð¾Ð´ÐµÐ¶Ð´Ð° - Shopping and clothes",
+    "ÐžÐ±Ñ‰ÐµÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ð¹ Ñ‚Ñ€Ð°Ð½ÑÐ¿Ð¾Ñ€Ñ‚ - Public transport",
+    "Ð’ Ñ€ÐµÑÑ‚Ð¾Ñ€Ð°Ð½Ðµ - At the restaurant",
+    "Ð—Ð´Ð¾Ñ€Ð¾Ð²ÑŒÐµ Ð¸ Ð±Ð»Ð°Ð³Ð¾Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ðµ - Health and wellness",
 ]
 
 YELLOW = (247, 202, 0)
@@ -67,21 +67,21 @@ def load_font(size, bold=False, italic=False):
         ])
     elif bold:
         fonts_to_try.extend([
-            "C:/Windows/Fonts/Inter-Bold-slnt=0.ttf", "C:/Windows/Fonts/segoeuib.ttf",
-            "C:/Windows/Fonts/arialbd.ttf",
+            str(FONTS_DIR / "DejaVuSans-Bold.ttf"),
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
-            str(FONTS_DIR / "DejaVuSans-Bold.ttf"),
+            "C:/Windows/Fonts/Inter-Bold-slnt=0.ttf", "C:/Windows/Fonts/segoeuib.ttf",
+            "C:/Windows/Fonts/arialbd.ttf",
         ])
     else:
         fonts_to_try.extend([
-            "C:/Windows/Fonts/Inter-Regular-slnt=0.ttf", "C:/Windows/Fonts/segoeui.ttf",
-            "C:/Windows/Fonts/arial.ttf",
+            str(FONTS_DIR / "DejaVuSans.ttf"),
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
             "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
-            str(FONTS_DIR / "DejaVuSans.ttf"),
+            "C:/Windows/Fonts/Inter-Regular-slnt=0.ttf", "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/arial.ttf",
         ])
 
     for fp in fonts_to_try:
@@ -91,18 +91,106 @@ def load_font(size, bold=False, italic=False):
     return ImageFont.load_default()
 
 def clean_text(text):
-    text = re.sub(r'\b(mm+|um+|uh+|ah+|äh+)\b', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\b(mm+|um+|uh+|ah+|Ã¤h+)\b', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
+
+ROMAN_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+    'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+    'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+    'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch',
+    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+}
+
+def romanize_russian(text):
+    """Transliterate Cyrillic Russian to Latin (heuristic fallback)."""
+    if not text:
+        return text
+    out = []
+    for ch in text:
+        out.append(ROMAN_MAP[ch] if ch in ROMAN_MAP else ch)
+    roman = ''.join(out)
+    return re.sub(r'\s+', ' ', roman).strip()
+
+def sanitize_translit(text):
+    """Drop non-Latin chars from transliteration so no tofu glyphs appear (font is Latin-only)."""
+    if not text:
+        return text
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    out = []
+    for ch in text:
+        o = ord(ch)
+        if 0x20 <= o <= 0x7E or o in (0x0A, 0x0D):
+            out.append(ch)
+        else:
+            out.append(' ')
+    return re.sub(r'\s+', ' ', ''.join(out)).strip()
+
+def _wrap_latin(text, font, max_w, draw):
+    """Wrap latin text into lines, each <= max_w."""
+    words = text.split()
+    lines, cur = [], []
+    for w in words:
+        t = ' '.join(cur + [w])
+        bb = draw.textbbox((0, 0), t, font=font)
+        if bb[2] - bb[0] <= max_w or not cur:
+            cur.append(w)
+        else:
+            if cur:
+                lines.append(' '.join(cur))
+            cur = [w]
+    if cur:
+        lines.append(' '.join(cur))
+    return lines
+
+def _wrap_any(text, font, max_w, draw):
+    """Wrap any text (Cyrillic ok) into lines, each <= max_w."""
+    return _wrap_latin(text, font, max_w, draw)
+
+def _translit_ink_height(font, lines):
+    """Measured ink height of the (already-wrapped) translit lines."""
+    if not lines:
+        return 0
+    from PIL import Image as _I, ImageDraw as _D
+    tmp = _I.new('RGB', (1920, 200), (0, 0, 0))
+    tdraw = _D.Draw(tmp)
+    lh = int(font.size * 1.3)
+    bb = tdraw.textbbox((0, 0), lines[0], font=font)
+    first_ink = bb[3] - bb[1]
+    return (len(lines) - 1) * lh + first_ink
+
+def draw_translit(draw, text, center_y, font, max_w=1350, line_height=52):
+    """Draw transliteration (latin italic) centered, like english translation."""
+    lines = _wrap_latin(text, font, max_w, draw)
+    if not lines:
+        return 0, 0
+    total_h = len(lines) * line_height
+    start_y = center_y - total_h // 2
+    ink_min_top = None
+    ink_max = None
+    for idx, line in enumerate(lines):
+        lx = VIDEO_WIDTH // 2
+        ly = start_y + idx * line_height + line_height // 2
+        draw.text((lx, ly), line, fill=LIGHT_GRAY, font=font, anchor="mm")
+        bb = draw.textbbox((lx, ly), line, font=font, anchor="mm")
+        ink_min_top = bb[1] if ink_min_top is None else min(ink_min_top, bb[1])
+        ink_max = bb[3] if ink_max is None else max(ink_max, bb[3])
+    return ink_min_top or start_y, ink_max or start_y + total_h
 
 def auto_highlight_russian(text):
     if '**' in text:
         return text
-    stopwords = {'и', 'в', 'на', 'с', 'по', 'для', 'что', 'это', 'как', 'я', 'ты', 'он', 'она', 'мы', 'вы', 'они', 'не', 'но', 'если', 'когда', 'очень'}
+    stopwords = {'Ð¸', 'Ð²', 'Ð½Ð°', 'Ñ', 'Ð¿Ð¾', 'Ð´Ð»Ñ', 'Ñ‡Ñ‚Ð¾', 'ÑÑ‚Ð¾', 'ÐºÐ°Ðº', 'Ñ', 'Ñ‚Ñ‹', 'Ð¾Ð½', 'Ð¾Ð½Ð°', 'Ð¼Ñ‹', 'Ð²Ñ‹', 'Ð¾Ð½Ð¸', 'Ð½Ðµ', 'Ð½Ð¾', 'ÐµÑÐ»Ð¸', 'ÐºÐ¾Ð³Ð´Ð°', 'Ð¾Ñ‡ÐµÐ½ÑŒ'}
     words = text.split()
     candidates = []
     for idx, w in enumerate(words):
-        clean_w = re.sub(r'[^\wÄÖÜäöüß]', '', w, flags=re.UNICODE)
+        clean_w = re.sub(r'[^\wÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ]', '', w, flags=re.UNICODE)
         if clean_w.lower() not in stopwords and len(clean_w) >= 3:
             candidates.append((len(clean_w), idx, w, clean_w))
     if candidates:
@@ -204,6 +292,8 @@ def draw_rich_text_centered(draw, text, center_y, font, max_w=1550, line_height=
     total_height = len(lines) * line_height
     start_y = center_y - total_height // 2
 
+    ink_min_top = None
+    ink_max = None
     for line_idx, (line_words, line_w) in enumerate(lines):
         start_x = (VIDEO_WIDTH - line_w) // 2
         curr_x = start_x
@@ -212,7 +302,15 @@ def draw_rich_text_centered(draw, text, center_y, font, max_w=1550, line_height=
         for word, is_yellow, w_w in line_words:
             color = YELLOW if is_yellow else WHITE
             draw.text((curr_x, curr_y), word, fill=color, font=font)
+            bb = draw.textbbox((curr_x, curr_y), word, font=font)
+            ink_min_top = bb[1] if ink_min_top is None else min(ink_min_top, bb[1])
+            ink_max = bb[3] if ink_max is None else max(ink_max, bb[3])
             curr_x += w_w
+
+    if ink_min_top is None:
+        ink_min_top = start_y
+        ink_max = start_y + total_height
+    return ink_min_top, ink_max
 
 def draw_english_translation(draw, text, center_y, font, max_w=1350, line_height=52):
     words = text.split()
@@ -233,10 +331,20 @@ def draw_english_translation(draw, text, center_y, font, max_w=1350, line_height
         
     total_h = len(lines) * line_height
     start_y = center_y - total_h // 2
-    
+
+    ink_min_top = None
+    ink_max = None
     for idx, line in enumerate(lines):
-        draw.text((VIDEO_WIDTH // 2, start_y + idx * line_height + line_height // 2),
-                  line, fill=LIGHT_GRAY, font=font, anchor="mm")
+        lx = VIDEO_WIDTH // 2
+        ly = start_y + idx * line_height + line_height // 2
+        draw.text((lx, ly), line, fill=LIGHT_GRAY, font=font, anchor="mm")
+        bb = draw.textbbox((lx, ly), line, font=font, anchor="mm")
+        ink_min_top = bb[1] if ink_min_top is None else min(ink_min_top, bb[1])
+        ink_max = bb[3] if ink_max is None else max(ink_max, bb[3])
+    if ink_min_top is None:
+        ink_min_top = start_y
+        ink_max = start_y + total_h
+    return ink_min_top, ink_max
 
 def create_frame(turn, output_path, frame_num=0):
     img = Image.new('RGB', (VIDEO_WIDTH, VIDEO_HEIGHT), DARK_BG)
@@ -299,55 +407,74 @@ def create_frame(turn, output_path, frame_num=0):
 
     draw.text((pill_x + pill_w + 25, pill_y + 26), "govorit", fill=LIGHT_GRAY, font=f_hablando, anchor="lm")
 
-    # === MAIN RUSSIAN TEXT ===
-
-    # === MAIN TEXT (auto-size, HARD max 3 lines) ===
+    # === MAIN RUSSIAN TEXT + TRANSLITERATION (top-anchored, uniform gap) ===
+    ZONE_TOP = 300
+    DIV_Y = 615
+    ZONE_H = (DIV_Y - 30) - ZONE_TOP
     russian_text = turn.get("russian", turn.get("spanish", ""))
-    chosen_font = None
-    chosen_lh = 90
-    final_lines = []
+    translit_text = romanize_russian(sanitize_translit(turn.get("translit", "")))
+    if not translit_text:
+        translit_text = romanize_russian(russian_text)
+    translit_text = re.sub(r'\*\*(.*?)\*\*', r'\1', translit_text).strip()
+
+    # 1) choose largest Russian font that wraps into <= 3 lines
+    ru_font = None
+    ru_size = 64
     for test_size in [64, 56, 48, 40, 34, 28, 24, 20]:
-        test_font = load_font(test_size, bold=True)
-        test_lh = int(test_size * 1.4)
-        text_words = russian_text.split()
-        tmp_lines = []
-        cur = []
-        for w in text_words:
-            test = ' '.join(cur + [w])
-            bb = draw.textbbox((0, 0), test, font=test_font)
-            if bb[2] - bb[0] <= 1550 or not cur:
-                cur.append(w)
-            else:
-                tmp_lines.append(' '.join(cur))
-                cur = [w]
-        if cur: tmp_lines.append(' '.join(cur))
-        if len(tmp_lines) <= 3:
-            chosen_font = test_font
-            chosen_lh = test_lh
-            final_lines = tmp_lines
+        tf = load_font(test_size, bold=True)
+        tl = _wrap_any(russian_text, tf, 1550, draw)
+        if len(tl) <= 3:
+            ru_font, ru_size, final_lines = tf, test_size, tl
             break
-    if chosen_font is None:
-        chosen_font = load_font(20, bold=True)
-        chosen_lh = int(20 * 1.4)
-        text_words = russian_text.split()
-        tmp_lines = []
-        cur = []
-        for w in text_words:
-            test = ' '.join(cur + [w])
-            bb = draw.textbbox((0, 0), test, font=chosen_font)
-            if bb[2] - bb[0] <= 1550 or not cur:
-                cur.append(w)
-            else:
-                tmp_lines.append(' '.join(cur))
-                cur = [w]
-        if cur: tmp_lines.append(' '.join(cur))
-        if len(tmp_lines) > 3:
-            tmp_lines = tmp_lines[:3]
-            if russian_text:
-                tmp_lines[-1] = tmp_lines[-1].rstrip() + "..."
-        final_lines = tmp_lines
-        russian_text = " ".join(final_lines)
-    draw_rich_text_centered(draw, russian_text, center_y=440, font=chosen_font, max_w=1550, line_height=chosen_lh)
+    if ru_font is None:
+        ru_font, ru_size = load_font(20, bold=True), 20
+        all_lines = _wrap_any(russian_text, ru_font, 1550, draw)
+        final_lines = all_lines[:3]
+        if len(all_lines) > 3 and russian_text:
+            final_lines[-1] = final_lines[-1].rstrip() + "..."
+
+    # 2) wrap translit at starting size
+    tl_size = 34
+    tl_font = load_font(tl_size, bold=False, italic=True)
+    tl_lines = _wrap_latin(translit_text, tl_font, 1350, draw)
+    n_tl = len(tl_lines)
+
+    RO_GAP = 14
+    ru_lh = int(ru_size * 1.4)
+    tl_lh = int(tl_size * 1.3)
+
+    # 3) dynamically shrink BOTH fonts until everything fits above the divider
+    while True:
+        block_h = len(final_lines) * ru_lh + (RO_GAP if n_tl else 0) + n_tl * tl_lh
+        if block_h <= ZONE_H or ru_size <= 20:
+            break
+        ru_size = max(20, ru_size - 2)
+        tl_size = max(18, tl_size - 1)
+        ru_font = load_font(ru_size, bold=True)
+        tl_font = load_font(tl_size, bold=False, italic=True)
+        final_lines = _wrap_any(russian_text, ru_font, 1550, draw)
+        if len(final_lines) > 3:
+            final_lines = final_lines[:3]
+            final_lines[-1] = final_lines[-1].rstrip() + "..."
+        n_ja = len(final_lines)
+        tl_lines = _wrap_latin(translit_text, tl_font, 1350, draw)
+        n_tl = len(tl_lines)
+        ru_lh = int(ru_size * 1.4)
+        tl_lh = int(tl_size * 1.3)
+
+    n_ja = len(final_lines)
+    ja_ink_top, ja_ink_bottom = draw_rich_text_centered(
+        draw, " ".join(final_lines), center_y=ZONE_TOP + n_ja * ru_lh // 2,
+        font=ru_font, max_w=1550, line_height=ru_lh)
+
+    # === TRANSLITERATION (italic latin, uniform ink gap below Russian) ===
+    if n_tl:
+        ih = _translit_ink_height(tl_font, tl_lines)
+        target_top = ja_ink_bottom + RO_GAP
+        ly0 = target_top + ih / 2
+        tl_center = ly0 - tl_lh // 2 + (n_tl * tl_lh) // 2
+        draw_translit(draw, " ".join(tl_lines), center_y=tl_center,
+                      font=tl_font, max_w=1350, line_height=tl_lh)
 
     # === CENTER DIVIDER WITH DOT ===
     div_y = 615
@@ -387,26 +514,26 @@ def _fetch_turns_batch(topic, topic_es, topic_en, start_turn, batch_size=10):
     elif start_turn < 4:
         intro_instruction = "Continue naturally into the topic conversation. No new introductions.\n"
 
-    prompt = f"""You are writing a Russian/English learning podcast at A2 level.
+    prompt = f"""You are writing a Russian/English learning podcast at A2 level with transliteration.
 Topic: {topic}
 
 The dialogue so far is at turn {start_turn}. The current speaker is {host_role} ({current_host}).
 Write the NEXT {batch_size} turns. Speakers STRICTLY alternate starting with {current_host}.
 
 {intro_instruction}Each turn: 3-4 SHORT sentences (6-10 words each) with PERIODS for natural TTS pauses. 20-30 seconds spoken.
-Simple present tense. A2 vocabulary. Natural Russian. NO filler sounds.
-IMPORTANT: Highlight exactly 1 key A2 target vocabulary word in each turn's Russian text using double asterisks, for example: "Мы смотрим в **будущее**."
+Simple present tense. A2 vocabulary. Natural Russian. Include "translit" (Latin-letter pronunciation spelling a beginner can read aloud) for every Russian line. NO filler sounds.
+IMPORTANT: Highlight exactly 1 key A2 target vocabulary word in each turn's Russian text using double asterisks, for example: "ÐœÑ‹ ÑÐ¼Ð¾Ñ‚Ñ€Ð¸Ð¼ Ð² **Ð±ÑƒÐ´ÑƒÑ‰ÐµÐµ**."
 
-Return EXACTLY {batch_size} turns as a JSON array (no markdown):
-[{{"speaker": "{current_host}", "russian": "...", "english": "..."}},
- {{"speaker": "{next_host}", "russian": "...", "english": "..."}}]"""
+Return EXACTLY {batch_size} turns as a JSON array (no markdown). Each turn has "russian" (Russian text), "translit" (Latin transliteration of the Russian), and "english" (English translation):
+[{{"speaker": "{current_host}", "russian": "...", "translit": "...", "english": "..."}},
+ {{"speaker": "{next_host}", "russian": "...", "translit": "...", "english": "..."}}]"""
 
     for attempt in range(3):
         try:
             resp = requests.post("https://gen.pollinations.ai/v1/chat/completions", json={
                 "model": AI_MODEL,
                 "messages": [
-                    {"role": "system", "content": "You write natural A2-level Russian podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Anna and Ivan strictly alternate. Highlight 1 key target word per turn in double asterisks like **slovo**. No filler sounds."},
+                    {"role": "system", "content": "You write natural A2-level Russian podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Anna and Ivan strictly alternate. Always include a \"translit\" field: a Latin-letter pronunciation spelling of the Russian text that a beginner can read aloud. Highlight 1 key target word per turn in double asterisks like **slovo**. No filler sounds."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.9
@@ -451,11 +578,13 @@ Return EXACTLY {batch_size} turns as a JSON array (no markdown):
                     continue
                 es = turn.get("russian") or turn.get("spanish") or turn.get("text") or turn.get("content") or ""
                 en = turn.get("english") or turn.get("translation") or ""
+                translit = turn.get("translit") or turn.get("romanji") or turn.get("transliteration") or turn.get("romaji") or ""
                 if not es:
                     continue
                 valid.append({
                     "speaker": current_host if i % 2 == 0 else next_host,
                     "russian": clean_text(es),
+                    "translit": clean_text(translit) if translit else romanize_russian(clean_text(es)),
                     "english": clean_text(en) if en else "Translation unavailable"
                 })
             if valid:
@@ -499,11 +628,13 @@ def generate_script():
 
     # Short 2-line intro: Ivan (Host2) first, then Anna (Host1), then topic
     all_turns[0]["speaker"] = "Host2"
-    all_turns[0]["russian"] = f"Привет, я Иван. Добро пожаловать в Velocity Russian. Сегодня мы говорим о {topic_es}."
+    all_turns[0]["russian"] = f"ÐŸÑ€Ð¸Ð²ÐµÑ‚, Ñ Ð˜Ð²Ð°Ð½. Ð”Ð¾Ð±Ñ€Ð¾ Ð¿Ð¾Ð¶Ð°Ð»Ð¾Ð²Ð°Ñ‚ÑŒ Ð² Velocity Russian. Ð¡ÐµÐ³Ð¾Ð´Ð½Ñ Ð¼Ñ‹ Ð³Ð¾Ð²Ð¾Ñ€Ð¸Ð¼ Ð¾ {topic_es}."
+    all_turns[0]["translit"] = romanize_russian(all_turns[0]["russian"])
     all_turns[0]["english"] = f"Hi, I'm Ivan. Welcome to Velocity Russian Podcast. Today we talk about {topic_en}."
     if len(all_turns) > 1:
         all_turns[1]["speaker"] = "Host1"
-        all_turns[1]["russian"] = f"Спасибо, Иван. Сегодняшняя тема очень **интересная**. Начнём.."
+        all_turns[1]["russian"] = f"Ð¡Ð¿Ð°ÑÐ¸Ð±Ð¾, Ð˜Ð²Ð°Ð½. Ð¡ÐµÐ³Ð¾Ð´Ð½ÑÑˆÐ½ÑÑ Ñ‚ÐµÐ¼Ð° Ð¾Ñ‡ÐµÐ½ÑŒ **Ð¸Ð½Ñ‚ÐµÑ€ÐµÑÐ½Ð°Ñ**. ÐÐ°Ñ‡Ð½Ñ‘Ð¼.."
+        all_turns[1]["translit"] = romanize_russian(all_turns[1]["russian"])
         all_turns[1]["english"] = f"Thanks, Ivan. Today's topic is very interesting. Let's start."
 
     print(f"  Script: {len(all_turns)} turns, topic: {topic_es}")
@@ -515,9 +646,11 @@ def _fallback_script(topic_es, topic_en):
     for i in range(150):
         s = "Host2" if i % 2 == 0 else "Host1"
         if s == "Host2":
-            turns.append({"speaker": s, "russian": f"Привет, я Иван. Поговорим о **будущем** и о {topic_es}.", "english": f"Hi, I'm Ivan. Let's talk about the future and {topic_en}."})
+            rus = f"ÐŸÑ€Ð¸Ð²ÐµÑ‚, Ñ Ð˜Ð²Ð°Ð½. ÐŸÐ¾Ð³Ð¾Ð²Ð¾Ñ€Ð¸Ð¼ Ð¾ **Ð±ÑƒÐ´ÑƒÑ‰ÐµÐ¼** Ð¸ Ð¾ {topic_es}."
+            turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Hi, I'm Ivan. Let's talk about the future and {topic_en}."})
         else:
-            turns.append({"speaker": s, "russian": f"Хорошая идея, Иван. {topic_es} очень **интересно**.", "english": f"Good idea Ivan. {topic_en} is very interesting."})
+            rus = f"Ð¥Ð¾Ñ€Ð¾ÑˆÐ°Ñ Ð¸Ð´ÐµÑ, Ð˜Ð²Ð°Ð½. {topic_es} Ð¾Ñ‡ÐµÐ½ÑŒ **Ð¸Ð½Ñ‚ÐµÑ€ÐµÑÐ½Ð¾**."
+            turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Good idea Ivan. {topic_en} is very interesting."})
     return turns
 
 
@@ -666,31 +799,31 @@ async def main():
 
 def build_podcast_title(topic_es, topic_en):
     titles = [
-        f"Russian Podcast: {topic_es} | Учи русский",
+        f"Russian Podcast: {topic_es} | Ð£Ñ‡Ð¸ Ñ€ÑƒÑÑÐºÐ¸Ð¹",
         f"Learn Russian: {topic_es} | Bilingual Podcast",
         f"{topic_es} | Russian Conversation for Beginners",
-        f"{topic_es} | Практикуй русский с Анной и Иваном",
+        f"{topic_es} | ÐŸÑ€Ð°ÐºÑ‚Ð¸ÐºÑƒÐ¹ Ñ€ÑƒÑÑÐºÐ¸Ð¹ Ñ ÐÐ½Ð½Ð¾Ð¹ Ð¸ Ð˜Ð²Ð°Ð½Ð¾Ð¼",
     ]
     return random.choice(titles)
 
 
 def build_podcast_description(topic_es, topic_en, turns_count, duration_min):
     description = (
-        f"🎙️ Добро пожаловать в Velocity Russian Podcast!\n\n"
-        f"В этом выпуске Анна и Иван говорят о: {topic_es} ({topic_en}).\n"
-        f"Непринуждённый двуязычный разговор на уровне A2, чтобы учить русский язык естественно.\n\n"
-        f"✨ WHAT'S INSIDE THIS EPISODE:\n"
-        f"• {turns_count} полезные фразы и выражения на русском\n"
-        f"• Настоящие разговоры с повседневной лексикой\n"
-        f"• Естественное произношение носителей языка\n"
-        f"• Английский перевод в каждой строке\n\n"
-        f"📌 HOW TO USE THIS PODCAST:\n"
-        f"1️⃣ Слушайте русскую часть и пытайтесь понять\n"
-        f"2️⃣ Проверьте английский перевод\n"
-        f"3️⃣ Повторяйте фразы вслух\n"
-        f"4️⃣ Слушайте завтра снова - каждый день становится легче!\n\n"
-        f"🔔 Подпишитесь на новый урок каждый день.\n\n"
-        f"📅 Длительность: {duration_min} минут\n\n"
+        f"ðŸŽ™ï¸ Ð”Ð¾Ð±Ñ€Ð¾ Ð¿Ð¾Ð¶Ð°Ð»Ð¾Ð²Ð°Ñ‚ÑŒ Ð² Velocity Russian Podcast!\n\n"
+        f"Ð’ ÑÑ‚Ð¾Ð¼ Ð²Ñ‹Ð¿ÑƒÑÐºÐµ ÐÐ½Ð½Ð° Ð¸ Ð˜Ð²Ð°Ð½ Ð³Ð¾Ð²Ð¾Ñ€ÑÑ‚ Ð¾: {topic_es} ({topic_en}).\n"
+        f"ÐÐµÐ¿Ñ€Ð¸Ð½ÑƒÐ¶Ð´Ñ‘Ð½Ð½Ñ‹Ð¹ Ð´Ð²ÑƒÑÐ·Ñ‹Ñ‡Ð½Ñ‹Ð¹ Ñ€Ð°Ð·Ð³Ð¾Ð²Ð¾Ñ€ Ð½Ð° ÑƒÑ€Ð¾Ð²Ð½Ðµ A2, Ñ‡Ñ‚Ð¾Ð±Ñ‹ ÑƒÑ‡Ð¸Ñ‚ÑŒ Ñ€ÑƒÑÑÐºÐ¸Ð¹ ÑÐ·Ñ‹Ðº ÐµÑÑ‚ÐµÑÑ‚Ð²ÐµÐ½Ð½Ð¾.\n\n"
+        f"âœ¨ WHAT'S INSIDE THIS EPISODE:\n"
+        f"â€¢ {turns_count} Ð¿Ð¾Ð»ÐµÐ·Ð½Ñ‹Ðµ Ñ„Ñ€Ð°Ð·Ñ‹ Ð¸ Ð²Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ Ð½Ð° Ñ€ÑƒÑÑÐºÐ¾Ð¼\n"
+        f"â€¢ ÐÐ°ÑÑ‚Ð¾ÑÑ‰Ð¸Ðµ Ñ€Ð°Ð·Ð³Ð¾Ð²Ð¾Ñ€Ñ‹ Ñ Ð¿Ð¾Ð²ÑÐµÐ´Ð½ÐµÐ²Ð½Ð¾Ð¹ Ð»ÐµÐºÑÐ¸ÐºÐ¾Ð¹\n"
+        f"â€¢ Ð•ÑÑ‚ÐµÑÑ‚Ð²ÐµÐ½Ð½Ð¾Ðµ Ð¿Ñ€Ð¾Ð¸Ð·Ð½Ð¾ÑˆÐµÐ½Ð¸Ðµ Ð½Ð¾ÑÐ¸Ñ‚ÐµÐ»ÐµÐ¹ ÑÐ·Ñ‹ÐºÐ°\n"
+        f"â€¢ ÐÐ½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´ Ð² ÐºÐ°Ð¶Ð´Ð¾Ð¹ ÑÑ‚Ñ€Ð¾ÐºÐµ\n\n"
+        f"ðŸ“Œ HOW TO USE THIS PODCAST:\n"
+        f"1ï¸âƒ£ Ð¡Ð»ÑƒÑˆÐ°Ð¹Ñ‚Ðµ Ñ€ÑƒÑÑÐºÑƒÑŽ Ñ‡Ð°ÑÑ‚ÑŒ Ð¸ Ð¿Ñ‹Ñ‚Ð°Ð¹Ñ‚ÐµÑÑŒ Ð¿Ð¾Ð½ÑÑ‚ÑŒ\n"
+        f"2ï¸âƒ£ ÐŸÑ€Ð¾Ð²ÐµÑ€ÑŒÑ‚Ðµ Ð°Ð½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´\n"
+        f"3ï¸âƒ£ ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€ÑÐ¹Ñ‚Ðµ Ñ„Ñ€Ð°Ð·Ñ‹ Ð²ÑÐ»ÑƒÑ…\n"
+        f"4ï¸âƒ£ Ð¡Ð»ÑƒÑˆÐ°Ð¹Ñ‚Ðµ Ð·Ð°Ð²Ñ‚Ñ€Ð° ÑÐ½Ð¾Ð²Ð° - ÐºÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑÑ Ð»ÐµÐ³Ñ‡Ðµ!\n\n"
+        f"ðŸ”” ÐŸÐ¾Ð´Ð¿Ð¸ÑˆÐ¸Ñ‚ÐµÑÑŒ Ð½Ð° Ð½Ð¾Ð²Ñ‹Ð¹ ÑƒÑ€Ð¾Ðº ÐºÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ.\n\n"
+        f"ðŸ“… Ð”Ð»Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ: {duration_min} Ð¼Ð¸Ð½ÑƒÑ‚\n\n"
         f"#LearnRussian #RussianPodcast #Bilingual #LanguageLearning"
     )
     return description
