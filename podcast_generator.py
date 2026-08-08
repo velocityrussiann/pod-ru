@@ -184,9 +184,9 @@ def draw_translit(draw, text, center_y, font, max_w=1350, line_height=52):
     return ink_min_top or start_y, ink_max or start_y + total_h
 
 def auto_highlight_russian(text):
+    stopwords = {'и', 'в', 'на', 'с', 'по', 'для', 'что', 'это', 'как', 'я', 'ты', 'он', 'она', 'мы', 'вы', 'они', 'не', 'но', 'если', 'когда', 'очень'}
     if '**' in text:
         return text
-        stopwords = {'и', 'в', 'на', 'с', 'по', 'для', 'что', 'это', 'как', 'я', 'ты', 'он', 'она', 'мы', 'вы', 'они', 'не', 'но', 'если', 'когда', 'очень'}
     words = text.split()
     candidates = []
     for idx, w in enumerate(words):
