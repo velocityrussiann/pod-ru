@@ -26,21 +26,21 @@ VIDEO_HEIGHT = 1080
 FPS = 30
 
 TOPICS = [
-    "ÐŸÑƒÑ‚ÐµÑˆÐµÑÑ‚Ð²Ð¸Ðµ Ð² Ð½Ð¾Ð²ÑƒÑŽ ÑÑ‚Ñ€Ð°Ð½Ñƒ - Traveling to a new country",
-    "Ð¢Ñ€Ð°Ð´Ð¸Ñ†Ð¸Ð¾Ð½Ð½Ð°Ñ ÐµÐ´Ð° - Traditional food",
-    "ÐŸÐ¾Ð²ÑÐµÐ´Ð½ÐµÐ²Ð½Ñ‹Ð¹ Ñ€Ð°ÑÐ¿Ð¾Ñ€ÑÐ´Ð¾Ðº - Daily routine",
-    "ÐŸÑ€Ð°Ð·Ð´Ð½Ð¸ÐºÐ¸ Ð¸ Ñ‚Ð¾Ñ€Ð¶ÐµÑÑ‚Ð²Ð° - Holidays and celebrations",
-    "ÐŸÐ¾Ð³Ð¾Ð´Ð° Ð¸ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð° Ð³Ð¾Ð´Ð° - Weather and seasons",
-    "Ð¡ÐµÐ¼ÑŒÑ Ð¸ Ð´Ñ€ÑƒÐ·ÑŒÑ - Family and friends",
-    "ÐœÑƒÐ·Ñ‹ÐºÐ° Ð¸ Ñ„Ð¸Ð»ÑŒÐ¼Ñ‹ - Music and movies",
-    "Ð¡Ð¿Ð¾Ñ€Ñ‚ Ð¸ Ñ‚Ñ€ÐµÐ½Ð¸Ñ€Ð¾Ð²ÐºÐ¸ - Sports and exercise",
-    "Ð˜Ð´ÐµÐ°Ð»ÑŒÐ½Ñ‹Ð¹ Ð³Ð¾Ñ€Ð¾Ð´ - The ideal city",
-    "Ð˜Ð·ÑƒÑ‡ÐµÐ½Ð¸Ðµ ÑÐ·Ñ‹ÐºÐ¾Ð² - Learning languages",
-    "Ð’Ñ‹Ñ…Ð¾Ð´Ð½Ñ‹Ðµ - The weekend",
-    "ÐŸÐ¾ÐºÑƒÐ¿ÐºÐ¸ Ð¸ Ð¾Ð´ÐµÐ¶Ð´Ð° - Shopping and clothes",
-    "ÐžÐ±Ñ‰ÐµÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ð¹ Ñ‚Ñ€Ð°Ð½ÑÐ¿Ð¾Ñ€Ñ‚ - Public transport",
-    "Ð’ Ñ€ÐµÑÑ‚Ð¾Ñ€Ð°Ð½Ðµ - At the restaurant",
-    "Ð—Ð´Ð¾Ñ€Ð¾Ð²ÑŒÐµ Ð¸ Ð±Ð»Ð°Ð³Ð¾Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ðµ - Health and wellness",
+    "Путешествие в новую страну - Traveling to a new country",
+    "Традиционная еда - Traditional food",
+    "Повседневный распорядок - Daily routine",
+    "Праздники и торжества - Holidays and celebrations",
+    "Погода и времена года - Weather and seasons",
+    "Семья и друзья - Family and friends",
+    "Музыка и фильмы - Music and movies",
+    "Спорт и тренировки - Sports and exercise",
+    "Идеальный город - The ideal city",
+    "Изучение языков - Learning languages",
+    "Выходные - The weekend",
+    "Покупки и одежда - Shopping and clothes",
+    "Общественный транспорт - Public transport",
+    "В ресторане - At the restaurant",
+    "Здоровье и благополучие - Health and wellness",
 ]
 
 YELLOW = (247, 202, 0)
@@ -91,7 +91,7 @@ def load_font(size, bold=False, italic=False):
     return ImageFont.load_default()
 
 def clean_text(text):
-    text = re.sub(r'\b(mm+|um+|uh+|ah+|Ã¤h+)\b', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\b(mm+|um+|uh+|ah+|äh+)\b', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
@@ -186,11 +186,11 @@ def draw_translit(draw, text, center_y, font, max_w=1350, line_height=52):
 def auto_highlight_russian(text):
     if '**' in text:
         return text
-    stopwords = {'Ð¸', 'Ð²', 'Ð½Ð°', 'Ñ', 'Ð¿Ð¾', 'Ð´Ð»Ñ', 'Ñ‡Ñ‚Ð¾', 'ÑÑ‚Ð¾', 'ÐºÐ°Ðº', 'Ñ', 'Ñ‚Ñ‹', 'Ð¾Ð½', 'Ð¾Ð½Ð°', 'Ð¼Ñ‹', 'Ð²Ñ‹', 'Ð¾Ð½Ð¸', 'Ð½Ðµ', 'Ð½Ð¾', 'ÐµÑÐ»Ð¸', 'ÐºÐ¾Ð³Ð´Ð°', 'Ð¾Ñ‡ÐµÐ½ÑŒ'}
+        stopwords = {'и', 'в', 'на', 'с', 'по', 'для', 'что', 'это', 'как', 'я', 'ты', 'он', 'она', 'мы', 'вы', 'они', 'не', 'но', 'если', 'когда', 'очень'}
     words = text.split()
     candidates = []
     for idx, w in enumerate(words):
-        clean_w = re.sub(r'[^\wÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ]', '', w, flags=re.UNICODE)
+        clean_w = re.sub(r'[^\w\u0400-\u04FF\u00E0-\u00F6\u00F8-\u00FF\'’]', '', w, flags=re.UNICODE)
         if clean_w.lower() not in stopwords and len(clean_w) >= 3:
             candidates.append((len(clean_w), idx, w, clean_w))
     if candidates:
@@ -522,7 +522,7 @@ Write the NEXT {batch_size} turns. Speakers STRICTLY alternate starting with {cu
 
 {intro_instruction}Each turn: 3-4 SHORT sentences (6-10 words each) with PERIODS for natural TTS pauses. 20-30 seconds spoken.
 Simple present tense. A2 vocabulary. Natural Russian. Include "translit" (Latin-letter pronunciation spelling a beginner can read aloud) for every Russian line. NO filler sounds.
-IMPORTANT: Highlight exactly 1 key A2 target vocabulary word in each turn's Russian text using double asterisks, for example: "ÐœÑ‹ ÑÐ¼Ð¾Ñ‚Ñ€Ð¸Ð¼ Ð² **Ð±ÑƒÐ´ÑƒÑ‰ÐµÐµ**."
+IMPORTANT: Highlight exactly 1 key A2 target vocabulary word in each turn's Russian text using double asterisks, for example: "Мы смотрим в **будущее**."
 
 Return EXACTLY {batch_size} turns as a JSON array (no markdown). Each turn has "russian" (Russian text), "translit" (Latin transliteration of the Russian), and "english" (English translation):
 [{{"speaker": "{current_host}", "russian": "...", "translit": "...", "english": "..."}},
@@ -628,12 +628,12 @@ def generate_script():
 
     # Short 2-line intro: Ivan (Host2) first, then Anna (Host1), then topic
     all_turns[0]["speaker"] = "Host2"
-    all_turns[0]["russian"] = f"ÐŸÑ€Ð¸Ð²ÐµÑ‚, Ñ Ð˜Ð²Ð°Ð½. Ð”Ð¾Ð±Ñ€Ð¾ Ð¿Ð¾Ð¶Ð°Ð»Ð¾Ð²Ð°Ñ‚ÑŒ Ð² Velocity Russian. Ð¡ÐµÐ³Ð¾Ð´Ð½Ñ Ð¼Ñ‹ Ð³Ð¾Ð²Ð¾Ñ€Ð¸Ð¼ Ð¾ {topic_es}."
+    all_turns[0]["russian"] = f"Привет, я Иван. Добро пожаловать в Velocity Russian. Сегодня мы говорим о {topic_es}."
     all_turns[0]["translit"] = romanize_russian(all_turns[0]["russian"])
     all_turns[0]["english"] = f"Hi, I'm Ivan. Welcome to Velocity Russian Podcast. Today we talk about {topic_en}."
     if len(all_turns) > 1:
         all_turns[1]["speaker"] = "Host1"
-        all_turns[1]["russian"] = f"Ð¡Ð¿Ð°ÑÐ¸Ð±Ð¾, Ð˜Ð²Ð°Ð½. Ð¡ÐµÐ³Ð¾Ð´Ð½ÑÑˆÐ½ÑÑ Ñ‚ÐµÐ¼Ð° Ð¾Ñ‡ÐµÐ½ÑŒ **Ð¸Ð½Ñ‚ÐµÑ€ÐµÑÐ½Ð°Ñ**. ÐÐ°Ñ‡Ð½Ñ‘Ð¼.."
+        all_turns[1]["russian"] = f"Спасибо, Иван. Сегодняшняя тема очень **интересная**. Начнём."
         all_turns[1]["translit"] = romanize_russian(all_turns[1]["russian"])
         all_turns[1]["english"] = f"Thanks, Ivan. Today's topic is very interesting. Let's start."
 
@@ -646,10 +646,10 @@ def _fallback_script(topic_es, topic_en):
     for i in range(150):
         s = "Host2" if i % 2 == 0 else "Host1"
         if s == "Host2":
-            rus = f"ÐŸÑ€Ð¸Ð²ÐµÑ‚, Ñ Ð˜Ð²Ð°Ð½. ÐŸÐ¾Ð³Ð¾Ð²Ð¾Ñ€Ð¸Ð¼ Ð¾ **Ð±ÑƒÐ´ÑƒÑ‰ÐµÐ¼** Ð¸ Ð¾ {topic_es}."
+            rus = f"Привет, я Иван. Поговорим о **будущем** и о {topic_es}."
             turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Hi, I'm Ivan. Let's talk about the future and {topic_en}."})
         else:
-            rus = f"Ð¥Ð¾Ñ€Ð¾ÑˆÐ°Ñ Ð¸Ð´ÐµÑ, Ð˜Ð²Ð°Ð½. {topic_es} Ð¾Ñ‡ÐµÐ½ÑŒ **Ð¸Ð½Ñ‚ÐµÑ€ÐµÑÐ½Ð¾**."
+            rus = f"Хорошая идея, Иван. {topic_es} очень **интересно**."
             turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Good idea Ivan. {topic_en} is very interesting."})
     return turns
 
@@ -799,31 +799,31 @@ async def main():
 
 def build_podcast_title(topic_es, topic_en):
     titles = [
-        f"Russian Podcast: {topic_es} | Ð£Ñ‡Ð¸ Ñ€ÑƒÑÑÐºÐ¸Ð¹",
+        f"Russian Podcast: {topic_es} | Учи русский",
         f"Learn Russian: {topic_es} | Bilingual Podcast",
         f"{topic_es} | Russian Conversation for Beginners",
-        f"{topic_es} | ÐŸÑ€Ð°ÐºÑ‚Ð¸ÐºÑƒÐ¹ Ñ€ÑƒÑÑÐºÐ¸Ð¹ Ñ ÐÐ½Ð½Ð¾Ð¹ Ð¸ Ð˜Ð²Ð°Ð½Ð¾Ð¼",
+        f"{topic_es} | Практикуй русский с Анной и Иваном",
     ]
     return random.choice(titles)
 
 
 def build_podcast_description(topic_es, topic_en, turns_count, duration_min):
     description = (
-        f"ðŸŽ™ï¸ Ð”Ð¾Ð±Ñ€Ð¾ Ð¿Ð¾Ð¶Ð°Ð»Ð¾Ð²Ð°Ñ‚ÑŒ Ð² Velocity Russian Podcast!\n\n"
-        f"Ð’ ÑÑ‚Ð¾Ð¼ Ð²Ñ‹Ð¿ÑƒÑÐºÐµ ÐÐ½Ð½Ð° Ð¸ Ð˜Ð²Ð°Ð½ Ð³Ð¾Ð²Ð¾Ñ€ÑÑ‚ Ð¾: {topic_es} ({topic_en}).\n"
-        f"ÐÐµÐ¿Ñ€Ð¸Ð½ÑƒÐ¶Ð´Ñ‘Ð½Ð½Ñ‹Ð¹ Ð´Ð²ÑƒÑÐ·Ñ‹Ñ‡Ð½Ñ‹Ð¹ Ñ€Ð°Ð·Ð³Ð¾Ð²Ð¾Ñ€ Ð½Ð° ÑƒÑ€Ð¾Ð²Ð½Ðµ A2, Ñ‡Ñ‚Ð¾Ð±Ñ‹ ÑƒÑ‡Ð¸Ñ‚ÑŒ Ñ€ÑƒÑÑÐºÐ¸Ð¹ ÑÐ·Ñ‹Ðº ÐµÑÑ‚ÐµÑÑ‚Ð²ÐµÐ½Ð½Ð¾.\n\n"
-        f"âœ¨ WHAT'S INSIDE THIS EPISODE:\n"
-        f"â€¢ {turns_count} Ð¿Ð¾Ð»ÐµÐ·Ð½Ñ‹Ðµ Ñ„Ñ€Ð°Ð·Ñ‹ Ð¸ Ð²Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ Ð½Ð° Ñ€ÑƒÑÑÐºÐ¾Ð¼\n"
-        f"â€¢ ÐÐ°ÑÑ‚Ð¾ÑÑ‰Ð¸Ðµ Ñ€Ð°Ð·Ð³Ð¾Ð²Ð¾Ñ€Ñ‹ Ñ Ð¿Ð¾Ð²ÑÐµÐ´Ð½ÐµÐ²Ð½Ð¾Ð¹ Ð»ÐµÐºÑÐ¸ÐºÐ¾Ð¹\n"
-        f"â€¢ Ð•ÑÑ‚ÐµÑÑ‚Ð²ÐµÐ½Ð½Ð¾Ðµ Ð¿Ñ€Ð¾Ð¸Ð·Ð½Ð¾ÑˆÐµÐ½Ð¸Ðµ Ð½Ð¾ÑÐ¸Ñ‚ÐµÐ»ÐµÐ¹ ÑÐ·Ñ‹ÐºÐ°\n"
-        f"â€¢ ÐÐ½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´ Ð² ÐºÐ°Ð¶Ð´Ð¾Ð¹ ÑÑ‚Ñ€Ð¾ÐºÐµ\n\n"
-        f"ðŸ“Œ HOW TO USE THIS PODCAST:\n"
-        f"1ï¸âƒ£ Ð¡Ð»ÑƒÑˆÐ°Ð¹Ñ‚Ðµ Ñ€ÑƒÑÑÐºÑƒÑŽ Ñ‡Ð°ÑÑ‚ÑŒ Ð¸ Ð¿Ñ‹Ñ‚Ð°Ð¹Ñ‚ÐµÑÑŒ Ð¿Ð¾Ð½ÑÑ‚ÑŒ\n"
-        f"2ï¸âƒ£ ÐŸÑ€Ð¾Ð²ÐµÑ€ÑŒÑ‚Ðµ Ð°Ð½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´\n"
-        f"3ï¸âƒ£ ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€ÑÐ¹Ñ‚Ðµ Ñ„Ñ€Ð°Ð·Ñ‹ Ð²ÑÐ»ÑƒÑ…\n"
-        f"4ï¸âƒ£ Ð¡Ð»ÑƒÑˆÐ°Ð¹Ñ‚Ðµ Ð·Ð°Ð²Ñ‚Ñ€Ð° ÑÐ½Ð¾Ð²Ð° - ÐºÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑÑ Ð»ÐµÐ³Ñ‡Ðµ!\n\n"
-        f"ðŸ”” ÐŸÐ¾Ð´Ð¿Ð¸ÑˆÐ¸Ñ‚ÐµÑÑŒ Ð½Ð° Ð½Ð¾Ð²Ñ‹Ð¹ ÑƒÑ€Ð¾Ðº ÐºÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ.\n\n"
-        f"ðŸ“… Ð”Ð»Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ: {duration_min} Ð¼Ð¸Ð½ÑƒÑ‚\n\n"
+        f"🎙️ Добро пожаловать в Velocity Russian Podcast!\n\n"
+        f"В этом выпуске Анна и Иван говорят о: {topic_es} ({topic_en}).\n"
+        f"Непринуждённый двуязычный разговор на уровне A2, чтобы учить русский язык естественно.\n\n"
+        f"✨ WHAT'S INSIDE THIS EPISODE:\n"
+        f"• {turns_count} полезные фразы и выражения на русском\n"
+        f"• Настоящие разговоры с повседневной лексикой\n"
+        f"• Естественное произношение носителей языка\n"
+        f"• Английский перевод в каждой строке\n\n"
+        f"📚 HOW TO USE THIS PODCAST:\n"
+        f"1️⃣ Слушайте русскую часть и пытайтесь понять\n"
+        f"2️⃣ Проверьте английский перевод\n"
+        f"3️⃣ Повторяйте фразы вслух\n"
+        f"4️⃣ Слушайте завтра снова - каждый день становится легче!\n\n"
+        f"🔔 Подпишитесь на новый урок каждый день.\n\n"
+        f"🕓 Длительность: {duration_min} минут\n\n"
         f"#LearnRussian #RussianPodcast #Bilingual #LanguageLearning"
     )
     return description
