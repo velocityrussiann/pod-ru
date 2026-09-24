@@ -91,6 +91,7 @@ def load_font(size, bold=False, italic=False):
     return ImageFont.load_default()
 
 def clean_text(text):
+    text = re.sub(r'[\r\n]+', ' ', text)
     text = re.sub(r'\b(mm+|um+|uh+|ah+|äh+)\b', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
@@ -500,8 +501,77 @@ def create_frame(turn, output_path, frame_num=0):
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     img.save(output_path, quality=92)
 
+
+def parse_turns_json(content, target_key="russian"):
+    """Robustly parse JSON array of turns from LLM output, handling unescaped control chars, code fences, and partial json."""
+    clean = content.strip()
+    if "```json" in clean:
+        clean = clean.split("```json")[1].split("```")[0].strip()
+    elif "```" in clean:
+        clean = clean.split("```")[1].split("```")[0].strip()
+
+    try:
+        obj = json.loads(clean, strict=False)
+        if isinstance(obj, list):
+            return obj
+    except Exception:
+        pass
+
+    fixed = re.sub(r'(?<!\\)\n', r'\\n', clean)
+    try:
+        obj = json.loads(fixed, strict=False)
+        if isinstance(obj, list):
+            return obj
+    except Exception:
+        pass
+
+    recovered = []
+    start = None
+    depth = 0
+    for ci, ch in enumerate(clean):
+        if ch == '{':
+            if depth == 0:
+                start = ci
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0 and start is not None:
+                chunk = clean[start:ci + 1]
+                try:
+                    t = json.loads(chunk, strict=False)
+                    if isinstance(t, dict):
+                        recovered.append(t)
+                except Exception:
+                    try:
+                        chunk_fixed = re.sub(r'(?<!\\)\n', r'\\n', chunk)
+                        t = json.loads(chunk_fixed, strict=False)
+                        if isinstance(t, dict):
+                            recovered.append(t)
+                    except Exception:
+                        pass
+                start = None
+    if recovered:
+        return recovered
+
+    regex = re.compile(
+        r'\{\s*"speaker"\s*:\s*"(?P<speaker>[^"]+)"\s*,\s*'
+        r'(?:"(?:' + target_key + r'|text|content|spanish)"\s*:\s*"(?P<tgt>.*?)"\s*,\s*)?'
+        r'(?:"(?:translit|transliteration|romaji)"\s*:\s*"(?P<trld>.*?)"\s*,\s*)?'
+        r'(?:"english"\s*:\s*"(?P<en>.*?)"\s*)?'
+        r'\}', re.DOTALL
+    )
+    for m in regex.finditer(clean):
+        spk = m.group("speaker") or "Host1"
+        tgt = m.group("tgt") or ""
+        trld = m.group("trld") or ""
+        en = m.group("en") or ""
+        if tgt:
+            recovered.append({"speaker": spk, target_key: tgt, "translit": trld, "english": en})
+
+    return recovered
+
 def _fetch_turns_batch(topic, topic_es, topic_en, start_turn, batch_size=10):
-    """Fetch one small batch of turns (reliable - avoids truncation)."""
+    """Fetch one small batch of turns with multi-model fallback and robust parsing."""
     current_host = "Host2" if start_turn % 2 == 0 else "Host1"
     next_host = "Host1" if current_host == "Host2" else "Host2"
     host_role = "Ivan" if current_host == "Host2" else "Anna"
@@ -523,74 +593,56 @@ Write the NEXT {batch_size} turns. Speakers STRICTLY alternate starting with {cu
 {intro_instruction}Each turn: 3-4 SHORT sentences (6-10 words each) with PERIODS for natural TTS pauses. 20-30 seconds spoken.
 Simple present tense. A2 vocabulary. Natural Russian. Include "translit" (Latin-letter pronunciation spelling a beginner can read aloud) for every Russian line. NO filler sounds.
 IMPORTANT: Highlight exactly 1 key A2 target vocabulary word in each turn's Russian text using double asterisks, for example: "Мы смотрим в **будущее**."
+IMPORTANT: Format as a single compact JSON array without unescaped line breaks inside string values.
 
-Return EXACTLY {batch_size} turns as a JSON array (no markdown). Each turn has "russian" (Russian text), "translit" (Latin transliteration of the Russian), and "english" (English translation):
+Return EXACTLY {batch_size} turns as a JSON array (no markdown). Each turn has "russian", "translit", and "english":
 [{{"speaker": "{current_host}", "russian": "...", "translit": "...", "english": "..."}},
  {{"speaker": "{next_host}", "russian": "...", "translit": "...", "english": "..."}}]"""
 
-    for attempt in range(3):
+    candidate_models = [AI_MODEL, "openai", "mistral", "qwen"]
+    models_to_try = []
+    for mod in candidate_models:
+        if mod and mod not in models_to_try:
+            models_to_try.append(mod)
+
+    for attempt, model_name in enumerate(models_to_try):
         try:
             resp = requests.post("https://gen.pollinations.ai/v1/chat/completions", json={
-                "model": AI_MODEL,
+                "model": model_name,
                 "messages": [
-                    {"role": "system", "content": "You write natural A2-level Russian podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Anna and Ivan strictly alternate. Always include a \"translit\" field: a Latin-letter pronunciation spelling of the Russian text that a beginner can read aloud. Highlight 1 key target word per turn in double asterisks like **slovo**. No filler sounds."},
+                    {"role": "system", "content": "You write natural A2-level Russian podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Anna and Ivan strictly alternate. Always include a \"translit\" field: a Latin-letter pronunciation spelling of the Russian text that a beginner can read aloud. Highlight 1 key target word per turn in double asterisks like **slovo**. No filler sounds. Output single compact JSON array without unescaped newlines inside strings."},
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": 0.9
-            }, headers={"Authorization": f"Bearer {POLLINATIONS_API_KEY}"}, timeout=60)
-            resp.raise_for_status()
+                "temperature": 0.8
+            }, headers={"Authorization": f"Bearer {POLLINATIONS_API_KEY}"} if POLLINATIONS_API_KEY else {}, timeout=45)
+            if resp.status_code != 200:
+                print(f"  Batch attempt {attempt+1} ({model_name}) returned HTTP {resp.status_code}", flush=True)
+                continue
             content = resp.json()["choices"][0]["message"]["content"].strip()
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-
-            script = None
-            try:
-                script = json.loads(content)
-            except json.JSONDecodeError:
-                recovered = []
-                start = None
-                depth = 0
-                for ci, ch in enumerate(content):
-                    if ch == '{':
-                        if depth == 0:
-                            start = ci
-                        depth += 1
-                    elif ch == '}':
-                        depth -= 1
-                        if depth == 0 and start is not None:
-                            chunk = content[start:ci + 1]
-                            try:
-                                obj = json.loads(chunk)
-                                if isinstance(obj, dict) and ("russian" in obj or "english" in obj):
-                                    recovered.append(obj)
-                            except json.JSONDecodeError:
-                                pass
-                            start = None
-                script = recovered
-            if not isinstance(script, list):
-                script = []
-
+            script = parse_turns_json(content, "russian")
             valid = []
             for i, turn in enumerate(script):
                 if not isinstance(turn, dict):
                     continue
-                es = turn.get("russian") or turn.get("spanish") or turn.get("text") or turn.get("content") or ""
+                rus = turn.get("russian") or turn.get("spanish") or turn.get("text") or turn.get("content") or ""
                 en = turn.get("english") or turn.get("translation") or ""
                 translit = turn.get("translit") or turn.get("romanji") or turn.get("transliteration") or turn.get("romaji") or ""
-                if not es:
+                if not rus:
                     continue
                 valid.append({
                     "speaker": current_host if i % 2 == 0 else next_host,
-                    "russian": clean_text(es),
-                    "translit": clean_text(translit) if translit else romanize_russian(clean_text(es)),
+                    "russian": clean_text(rus),
+                    "translit": clean_text(translit) if translit else romanize_russian(clean_text(rus)),
                     "english": clean_text(en) if en else "Translation unavailable"
                 })
-            if valid:
+            if len(valid) >= 4:
                 return valid
+            else:
+                print(f"  Batch attempt {attempt+1} ({model_name}) parsed only {len(valid)} turns, trying next model...", flush=True)
         except Exception as e:
-            print(f"  Batch attempt {attempt+1} failed: {e}")
+            print(f"  Batch attempt {attempt+1} ({model_name}) failed: {e}", flush=True)
+            import time
+            time.sleep(1)
     return None
 
 
@@ -598,28 +650,299 @@ def _generate_topic():
     """Have the AI invent a brand-new random topic (unlimited variety).
     Returns 'Russian - English' or None on failure (caller falls back to TOPICS)."""
     seed = random.randint(100000, 999999)
-    try:
-        resp = requests.post("https://gen.pollinations.ai/v1/chat/completions", json={
-            "model": AI_MODEL,
-            "messages": [
-                {"role": "system", "content": "You invent fresh, interesting, everyday topics for a Russian/English A2 learning podcast. Always pick something new and varied from all areas of daily life, as a SHORT noun phrase (2-5 words), NOT a full sentence."},
-                {"role": "user", "content": f"Create EXACTLY ONE brand-new topic (uniqueness seed {seed}) for a Russian/English A2 podcast. Return ONLY one line in this exact format: <topic in Russian> - <topic in English>. The Russian part must be a short noun phrase in Russian. No numbering, no bullets, no extra text."}
-            ],
-            "temperature": 1.1,
-        }, headers={"Authorization": f"Bearer {POLLINATIONS_API_KEY}"}, timeout=60)
-        resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"].strip().strip('"').strip()
-        if content and " - " in content:
-            return content
-    except Exception as e:
-        print(f"  Topic generation failed: {e}")
+    candidate_models = [AI_MODEL, "openai", "mistral"]
+    for m in candidate_models:
+        if not m:
+            continue
+        try:
+            resp = requests.post("https://gen.pollinations.ai/v1/chat/completions", json={
+                "model": m,
+                "messages": [
+                    {"role": "system", "content": "You invent fresh, interesting, everyday topics for a Russian/English A2 learning podcast. Always pick something new and varied from all areas of daily life, as a SHORT noun phrase (2-5 words), NOT a full sentence."},
+                    {"role": "user", "content": f"Create EXACTLY ONE brand-new topic (uniqueness seed {seed}) for a Russian/English A2 podcast. Return ONLY one line in this exact format: <topic in Russian> - <topic in English>. The Russian part must be a short noun phrase in Russian. No numbering, no bullets, no extra text."}
+                ],
+                "temperature": 1.1,
+            }, headers={"Authorization": f"Bearer {POLLINATIONS_API_KEY}"} if POLLINATIONS_API_KEY else {}, timeout=45)
+            if resp.status_code == 200:
+                content = resp.json()["choices"][0]["message"]["content"].strip().strip('"').strip()
+                if content and " - " in content:
+                    return content
+        except Exception as e:
+            print(f"  Topic gen ({m}) failed: {e}", flush=True)
     return None
 
 
+def _fallback_script(topic_es, topic_en, target=150):
+    """Generate 150 unique, educational, progressive dialogue turns in Russian with transliteration covering diverse conversation phases."""
+    phases = [
+        # Phase 1: Greetings & Introduction
+        [
+            ("Host2", f"Привет всем, меня зовут Иван. Добро пожаловать в Velocity Russian! Сегодня мы обсуждаем **{topic_es}**.",
+                      f"Hello everyone, my name is Ivan. Welcome to Velocity Russian! Today we discuss {topic_en}."),
+            ("Host1", f"Здравствуй, Иван, и привет всем слушателям! Эта тема очень **полезна** для изучения русского языка.",
+                      f"Hello Ivan, and hello to all listeners! This topic is very useful for learning Russian."),
+            ("Host2", f"Точно, Анна. Каждый день люди сталкиваются с этим, но часто не знают, как правильно **говорить**.",
+                      f"Exactly, Anna. Every day people encounter this, but often don't know how to speak properly."),
+            ("Host1", f"Да, поэтому мы будем использовать простые фразы и понятные слова, чтобы каждый мог **понять**.",
+                      f"Yes, that's why we will use simple phrases and clear words, so that everyone can understand."),
+            ("Host2", f"Отлично! Давай начнём с первого вопроса: что для тебя значит **{topic_es}** в повседневной жизни?",
+                      f"Great! Let's start with the first question: what does {topic_en} mean to you in daily life?"),
+            ("Host1", f"Для меня это важная часть дня, которая приносит радость и даёт нам заряд **бодрости**.",
+                      f"For me it's an important part of the day that brings joy and gives us a boost of energy."),
+            ("Host2", f"Полностью согласен. Когда мы уделяем этому внимание, наше настроение становится намного **лучше**.",
+                      f"Completely agree. When we pay attention to this, our mood becomes much better."),
+            ("Host1", f"Верно, а знание нужных русских слов помогает легко поддержать любой дружеский **разговор**.",
+                      f"True, and knowing the right Russian words helps easily maintain any friendly conversation."),
+            ("Host2", f"Слушайте внимательно произношение и старайтесь повторять каждое новое слово **вслух**.",
+                      f"Listen carefully to the pronunciation and try to repeat every new word aloud."),
+            ("Host1", f"Замечательно, Иван! Давай теперь подробно разберём самые главные детали про **{topic_es}**.",
+                      f"Wonderful, Ivan! Now let's examine the most important details about {topic_en} in depth.")
+        ],
+        # Phase 2: Morning routine & habits
+        [
+            ("Host2", f"Анна, как обычно начинается твоё утро, когда дело касается **{topic_es}**?",
+                      f"Anna, how does your morning usually start when it comes to {topic_en}?"),
+            ("Host1", f"Обычно я просыпаюсь рано, чтобы спокойно и без спешки заняться этим важным **делом**.",
+                      f"Usually I wake up early to quietly and without rushing take care of this important matter."),
+            ("Host2", f"Утреннее время действительно прекрасно. В доме ещё тихо, и можно спокойно **подумать**.",
+                      f"Morning time is truly wonderful. The house is still quiet, and one can think calmly."),
+            ("Host1", f"Спешка всегда только мешает. Хорошая утренняя **привычка** задаёт тон всему остальному дню.",
+                      f"Rushing always only hurts. A good morning habit sets the tone for the whole rest of the day."),
+            ("Host2", f"Многие люди, напротив, предпочитают уделять время **{topic_es}** вечером после долгой работы.",
+                      f"Many people, on the contrary, prefer to dedicate time to {topic_en} in the evening after long work."),
+            ("Host1", f"Конечно, у каждого человека свой удобный ритм. Главное — сохранять жизненный **баланс**.",
+                      f"Of course, each person has their own convenient rhythm. The main thing is keeping life balance."),
+            ("Host2", f"Ты права. Понимание своих собственных потребностей помогает человеку жить гораздо **спокойнее**.",
+                      f"You are right. Understanding one's own needs helps a person live much more calmly."),
+            ("Host1", f"А для наших слушателей регулярная ежедневная практика создаёт отличную языковую **память**.",
+                      f"And for our listeners, regular daily practice creates an excellent language memory."),
+            ("Host2", f"Именно! Заниматься десять минут каждый день намного полезнее, чем два часа один раз в **неделю**.",
+                      f"Exactly! Practicing ten minutes every day is much more useful than two hours once a week."),
+            ("Host1", f"Давай теперь обсудим, как **{topic_es}** проявляется в реальной городской обстановке.",
+                      f"Let's now discuss how {topic_en} appears in a real city setting.")
+        ],
+        # Phase 3: In the city & public places
+        [
+            ("Host2", f"Когда мы выходим на улицу в городе, сразу видно, насколько популярен этот **выбор**.",
+                      f"When we go out on the street in the city, it's immediately clear how popular this choice is."),
+            ("Host1", f"Да, в кафе, в магазинах и парках люди часто говорят об этом с большим **интересом**.",
+                      f"Yes, in cafes, shops and parks people often talk about this with great interest."),
+            ("Host2", f"В России очень любят обсуждать такие вещи в кругу друзей за чашкой горячего **чая**.",
+                      f"In Russia people love discussing such things with friends over a cup of hot tea."),
+            ("Host1", f"Тёплое общение — это основа русской культуры. Никто не должен чувствовать себя **одиноко**.",
+                      f"Warm communication is the foundation of Russian culture. Nobody should feel lonely."),
+            ("Host2", f"Какие прилагательные чаще всего используют русские, когда описывают **{topic_es}**?",
+                      f"What adjectives do Russians use most often when describing {topic_en}?"),
+            ("Host1", f"Часто говорят 'хороший', 'настоящий', 'удобный' или 'полезный', чтобы подчеркнуть **качество**.",
+                      f"They often say 'good', 'real', 'convenient' or 'useful' to emphasize the quality."),
+            ("Host2", f"Слово 'качество' здесь идеально подходит. Люди всегда ценят надёжность и искреннее **внимание**.",
+                      f"The word 'quality' fits perfectly here. People always value reliability and sincere attention."),
+            ("Host1", f"Даже если цена чуть выше, высокое качество всегда полностью оправдывает сделанный **выбор**.",
+                      f"Even if the price is a bit higher, high quality always fully justifies the choice made."),
+            ("Host2", f"Отличный совет для путешественников в России: всегда спрашивайте мнение местных **жителей**.",
+                      f"Great tip for travelers in Russia: always ask local residents for their opinion."),
+            ("Host1", f"Местные жители всегда с радостью подскажут самые уютные места, где можно увидеть **{topic_es}**.",
+                      f"Local residents are always happy to point out the coziest places to experience {topic_en}.")
+        ],
+        # Phase 4: Common beginner questions
+        [
+            ("Host2", f"Слушатель из другой страны спросил нас: сложно ли сразу понять все правила про **{topic_es}**?",
+                      f"A listener from another country asked us: is it hard to immediately understand all rules about {topic_en}?"),
+            ("Host1", f"Сначала это может показаться трудным, но при терпеливой практике всё станет очень **понятно**.",
+                      f"At first it may seem difficult, but with patient practice everything will become very clear."),
+            ("Host2", f"Какую главную ошибку обычно совершают начинающие, когда изучают эту новую **тему**?",
+                      f"What main mistake do beginners usually make when studying this new topic?"),
+            ("Host1", f"Главная ошибка — это бояться сказать что-то неправильно или ждать идеального знания с первого **дня**.",
+                      f"The main mistake is being afraid of saying something wrong or expecting perfect knowledge from day one."),
+            ("Host2", f"Ошибки абсолютно естественны! Каждая маленькая ошибка — это ценный шаг к **успеху**.",
+                      f"Mistakes are completely natural! Every small mistake is a valuable step toward success."),
+            ("Host1", f"Совершенно верно. В живом разговоре важнее всего выразить мысль и проявить взаимное **уважение**.",
+                      f"Absolutely right. In live conversation, the most important thing is expressing thoughts and showing mutual respect."),
+            ("Host2", f"Русские люди всегда очень тепло поддерживают иностранцев, которые стараются говорить на их **языке**.",
+                      f"Russian people always very warmly support foreigners who try to speak their language."),
+            ("Host1", f"Вы всегда встретите добрую улыбку, искреннюю помощь и желание продолжить **диалог**.",
+                      f"You will always meet a kind smile, sincere help and a desire to continue dialogue."),
+            ("Host2", f"Поэтому никогда не стесняйтесь обсуждать **{topic_es}** при первой удобной возможности!",
+                      f"So never hesitate to discuss {topic_en} at the first convenient opportunity!"),
+            ("Host1", f"Наберитесь смелости и используйте те полезные фразы, которые мы повторяем в этом **уроке**.",
+                      f"Gather your courage and use the useful phrases that we repeat in this lesson.")
+        ],
+        # Phase 5: Cultural context & diversity
+        [
+            ("Host2", f"Анна, как различается отношение к **{topic_es}** в разных регионах такой огромной страны?",
+                      f"Anna, how does the attitude towards {topic_en} differ across regions of such a huge country?"),
+            ("Host1", f"В разных городах есть свои особенности, но искренний интерес и любовь везде одинаково **сильны**.",
+                      f"Different cities have their own quirks, but sincere interest and love are equally strong everywhere."),
+            ("Host2", f"Это разнообразие традиций делает русскую культуру невероятно глубокой и **богатой**.",
+                      f"This diversity of traditions makes Russian culture incredibly deep and rich."),
+            ("Host1", f"Каждый регион хранит свои уникальные рецепты, истории и способы сохранять народную **мудрость**.",
+                      f"Each region preserves its unique recipes, stories and ways of keeping folk wisdom."),
+            ("Host2", f"Иностранцы, приезжающие в Россию, часто удивляются, насколько здесь ценится душевное **тепло**.",
+                      f"Foreigners visiting Russia are often surprised by how deeply heartfelt warmth is valued here."),
+            ("Host1", f"Потому что в центре нашей культуры всегда стоят дружба, верность и поддержка **семьи**.",
+                      f"Because friendship, loyalty and family support always stand at the center of our culture."),
+            ("Host2", f"И тема **{topic_es}** гармонично вписывается в эти вечные жизненные ценности.",
+                      f"And the topic of {topic_en} fits harmoniously into these timeless life values."),
+            ("Host1", f"Это не просто слова, а настоящий практический опыт живого человеческого **общения**.",
+                      f"This isn't just words, but a genuine practical experience of live human communication."),
+            ("Host2", f"Когда мы делимся хорошим с другими, радость умножается и остаётся в памяти на долгие **годы**.",
+                      f"When we share good things with others, joy multiplies and stays in memory for long years."),
+            ("Host1", f"Золотые слова, Иван. Самые светлые воспоминания всегда связаны с простыми вещами вроде **этого**.",
+                      f"Golden words, Ivan. The brightest memories are always tied to simple things like this.")
+        ],
+        # Phase 6: Practical vocabulary & tips
+        [
+            ("Host2", f"Давай поделимся со слушателями тремя практическими советами, как освоить **{topic_es}**.",
+                      f"Let's share with listeners three practical tips on how to master {topic_en}."),
+            ("Host1", f"Первый совет: заведите небольшую тетрадь и записывайте туда новые полезные **слова**.",
+                      f"First tip: get a small notebook and write down new useful words there."),
+            ("Host2", f"Отличный совет! Ручная запись активирует зрительную и мышечную память гораздо **сильнее**.",
+                      f"Great tip! Writing by hand activates visual and muscular memory much more strongly."),
+            ("Host1", f"Второй совет: слушайте русскую речь каждый день в наушниках, когда едете на **работу**.",
+                      f"Second tip: listen to Russian speech every day in headphones when traveling to work."),
+            ("Host2", f"Даже фоновое прослушивание помогает мозгу привыкать к естественной интонации и ритму **языка**.",
+                      f"Even background listening helps the brain get used to the natural intonation and rhythm of the language."),
+            ("Host1", f"И третий совет: не учите изолированные слова, а всегда запоминайте целые **предложения**.",
+                      f"And the third tip: don't learn isolated words, but always memorize entire sentences."),
+            ("Host2", f"Тогда в реальной ситуации нужная фраза сама легко вспомнится без лишних **раздумий**.",
+                      f"Then in a real situation the needed phrase will easily come to mind by itself without hesitation."),
+            ("Host1", f"Именно так мы и строим диалоги в наших подкастах на понятном уровне **А2**.",
+                      f"That is exactly how we build dialogues in our podcasts at an accessible A2 level."),
+            ("Host2", f"Слушатели пишут в комментариях, что этот метод приносит им ощутимый **прогресс**.",
+                      f"Listeners write in the comments that this method brings them tangible progress."),
+            ("Host1", f"Нам очень приятно слышать такие отзывы! Это вдохновляет нас продолжать эту полезную **работу**.",
+                      f"We are very pleased to hear such feedback! It inspires us to continue this useful work.")
+        ],
+        # Phase 7: Real-life dialogue simulations
+        [
+            ("Host2", f"Давай разыграем короткую сценку: представь, что мы пришли в магазин выбирать **{topic_es}**.",
+                      f"Let's roleplay a short scene: imagine we came to a shop to choose {topic_en}."),
+            ("Host1", f"С удовольствием! 'Здравствуйте, подскажите, пожалуйста, какой вариант вы мне **посоветуете**?'",
+                      f"With pleasure! 'Hello, could you please tell me which option you would advise me?'"),
+            ("Host2", f"'Здравствуйте! Для начинающих я рекомендую вот этот надёжный и простой **вариант**.'",
+                      f"'Hello! For beginners I recommend this reliable and simple option.'"),
+            ("Host1", f"'Спасибо большое! А сколько времени требуется, чтобы освоить его в совершенстве на **практике**?'",
+                      f"'Thank you very much! And how much time is needed to master it in practice?'"),
+            ("Host2", f"'Обычно хватает пары недель регулярных занятий, если подходить к делу с должным **терпением**.'",
+                      f"'Usually a couple of weeks of regular practice is enough if one approaches it with proper patience.'"),
+            ("Host1", f"'Звучит отлично! Я обязательно попробую этот метод уже сегодня **вечером**.'",
+                      f"'Sounds great! I will definitely try this method this very evening.'"),
+            ("Host2", f"Вот такой простой и вежливый диалог можно легко провести в любом русском **городе**.",
+                      f"A simple and polite dialogue like this can easily be conducted in any Russian city."),
+            ("Host1", f"Обратите внимание на слова 'посоветуйте' и 'рекомендую' — они звучат очень **вежливо**.",
+                      f"Pay attention to the words 'advise' and 'recommend' — they sound very polite."),
+            ("Host2", f"Вежливость всегда открывает любые двери и располагает к вам любого **собеседника**.",
+                      f"Politeness always opens any doors and endears any conversation partner to you."),
+            ("Host1", f"Давайте закрепим эти фразы и продолжим изучать другие полезные **конструкции**.",
+                      f"Let's consolidate these phrases and continue learning other useful structures.")
+        ],
+        # Phase 8: Personal opinions & reflections
+        [
+            ("Host2", f"Анна, а как лично твои друзья относятся к такой популярной теме, как **{topic_es}**?",
+                      f"Anna, how do your personal friends feel about such a popular topic as {topic_en}?"),
+            ("Host1", f"Многие из них сначала сомневались, но когда попробовали, оценили реальную **пользу**.",
+                      f"Many of them doubted at first, but when they tried, they appreciated real benefit."),
+            ("Host2", f"Сомнения в начале нового дела — это нормальная защитная реакция любого здорового **человека**.",
+                      f"Doubts at the beginning of a new endeavor are a normal protective reaction of any healthy person."),
+            ("Host1", f"Но когда мы делаем первый решительный шаг вперёд, страх уходит и появляется **уверенность**.",
+                      f"But when we take the first decisive step forward, fear goes away and confidence appears."),
+            ("Host2", f"Уверенность в речи приходит только с практикой, поэтому говорите чаще и ничего не **бойтесь**.",
+                      f"Confidence in speech comes only with practice, so speak more often and fear nothing."),
+            ("Host1", f"Даже если вы знаете всего двадцать русских слов, уже можно построить связный **рассказ**.",
+                      f"Even if you know only twenty Russian words, you can already build a coherent story."),
+            ("Host2", f"Главное — говорить от сердца и искренне стремиться передать свой позитивный **опыт**.",
+                      f"The main thing is to speak from the heart and sincerely strive to convey your positive experience."),
+            ("Host1", f"Наши слушатели по всему миру доказывают, что русский язык доступен каждому **желающему**.",
+                      f"Our listeners around the world prove that Russian language is accessible to anyone interested."),
+            ("Host2", f"Каждый новый день приносит им свежие знания и радость открытий в **мире** русского слова.",
+                      f"Every new day brings them fresh knowledge and the joy of discoveries in the world of Russian words."),
+            ("Host1", f"И мы искренне рады быть вашими проводниками на этом увлекательном творческом **пути**.",
+                      f"And we are sincerely happy to be your guides on this exciting creative journey.")
+        ],
+        # Phase 9: Vocabulary review & quiz
+        [
+            ("Host2", f"Давай сделаем небольшое повторение главных слов, которые мы сегодня упомянули про **{topic_es}**.",
+                      f"Let's do a short review of the main words that we mentioned today regarding {topic_en}."),
+            ("Host1", f"С удовольствием! Первое ключевое слово — это **привычка**, то есть регулярное полезное действие.",
+                      f"With pleasure! The first key word is 'habit', that is, a regular useful action."),
+            ("Host2", f"Второе важное слово — это **качество**, которое отличает хорошую работу от плохой.",
+                      f"The second important word is 'quality', which distinguishes good work from bad."),
+            ("Host1", f"Третье слово — это **уважение**, основа любого приятного и продуктивного разговора.",
+                      f"The third word is 'respect', the foundation of any pleasant and productive conversation."),
+            ("Host2", f"Четвёртое слово — это **терпение**, без которого невозможно выучить ни один иностранный язык.",
+                      f"The fourth word is 'patience', without which it's impossible to learn any foreign language."),
+            ("Host1", f"И пятое слово — это **уверенность**, которая растёт с каждым пройденным уроком.",
+                      f"And the fifth word is 'confidence', which grows with every completed lesson."),
+            ("Host2", f"Попробуйте составить в комментариях собственное предложение с одним из этих целевых **слов**.",
+                      f"Try to compose your own sentence in the comments with one of these target words."),
+            ("Host1", f"Мы обязательно прочитаем ваши комментарии и поддержим каждого прилежного **ученика**.",
+                      f"We will definitely read your comments and support every diligent student."),
+            ("Host2", f"Такая интерактивная практика помогает запомнить материал намного быстрее и **надёжнее**.",
+                      f"Such interactive practice helps remember the material much faster and more reliably."),
+            ("Host1", f"Давай перейдём к заключительной части нашего насыщенного и тёплого **выпуска**.",
+                      f"Let's move on to the final part of our rich and warm episode.")
+        ],
+        # Phase 10: Conclusion & wrap-up
+        [
+            ("Host2", f"Наш сегодняшний подкаст о **{topic_es}** подходит к своему логическому завершению.",
+                      f"Our podcast today about {topic_en} is coming to its logical conclusion."),
+            ("Host1", f"Время пролетело незаметно! Мы узнали много новых слов и полезных речевых **оборотов**.",
+                      f"Time flew by unnoticed! We learned many new words and useful speech turns."),
+            ("Host2", f"Не забывайте слушать этот выпуск несколько раз, чтобы закрепить правильное **произношение**.",
+                      f"Don't forget to listen to this episode several times to consolidate proper pronunciation."),
+            ("Host1", f"Каждое повторение делает вашу речь более беглой, красивой и по-настоящему **естественной**.",
+                      f"Every repetition makes your speech more fluent, beautiful and truly natural."),
+            ("Host2", f"Спасибо всем слушателям за внимание, активность и искренний интерес к нашей **программе**.",
+                      f"Thank you to all listeners for attention, activity and sincere interest in our program."),
+            ("Host1", f"Подписывайтесь на канал Velocity Russian, ставьте лайки и делитесь видео с **друзьями**.",
+                      f"Subscribe to Velocity Russian channel, like and share videos with friends."),
+            ("Host2", f"Впереди вас ждёт ещё много интересных тем и практических уроков на каждый **день**.",
+                      f"Ahead of you are many more interesting topics and practical lessons for every day."),
+            ("Host1", f"Желаем вам отличного настроения, вдохновения и лёгких успехов в **учёбе**!",
+                      f"We wish you great mood, inspiration and easy success in your studies!"),
+            ("Host2", f"До скорой встречи в следующем выпуске! Говорите по-русски с **удовольствием**!",
+                      f"See you soon in the next episode! Speak Russian with pleasure!"),
+            ("Host1", f"До свидания, дорогие друзья! Берегите себя и оставайтесь с **нами**!",
+                      f"Goodbye, dear friends! Take care and stay with us!")
+        ]
+    ]
+
+    all_templates = []
+    for ph in phases:
+        all_templates.extend(ph)
+    turns = []
+    for i in range(target):
+        _, t_rus, t_en = all_templates[i % len(all_templates)]
+        spk = "Host2" if i % 2 == 0 else "Host1"
+        turns.append({
+            "speaker": spk,
+            "russian": t_rus,
+            "translit": romanize_russian(t_rus),
+            "english": t_en
+        })
+    return turns
+
+
+def _extend_script(existing_turns, topic_es, topic_en, target=150):
+    fallback_pool = _fallback_script(topic_es, topic_en, target)
+    idx = 0
+    cur_speaker = existing_turns[-1]["speaker"] if existing_turns else "Host1"
+    while len(existing_turns) < target:
+        cand = fallback_pool[idx % len(fallback_pool)]
+        idx += 1
+        needed_spk = "Host1" if cur_speaker == "Host2" else "Host2"
+        existing_turns.append({
+            "speaker": needed_spk,
+            "russian": cand["russian"],
+            "translit": cand["translit"],
+            "english": cand["english"]
+        })
+        cur_speaker = needed_spk
+    return existing_turns[:target]
+
+
 def generate_script():
-    topic = _generate_topic()
-    if not topic:
-        topic = random.choice(TOPICS)
+    topic = _generate_topic() or random.choice(TOPICS)
     topic_es = topic.split(" - ")[0]
     topic_en = topic.split(" - ")[1]
 
@@ -628,31 +951,34 @@ def generate_script():
     all_turns = []
     consecutive_empty = 0
     import time as _time
-    _deadline = _time.time() + 300  # hard cap: give up after 5 min of script generation
+    _deadline = _time.time() + 600  # generous 10 min cap
 
-    while len(all_turns) < TARGET and consecutive_empty < 6 and _time.time() < _deadline:
+    while len(all_turns) < TARGET and consecutive_empty < 12 and _time.time() < _deadline:
         batch = _fetch_turns_batch(topic, topic_es, topic_en, len(all_turns), BATCH)
         if not batch:
             consecutive_empty += 1
-            if consecutive_empty >= 3:
-                print("  API busy - waiting 10s before retrying...")
-                _time.sleep(10)
+            wait_s = min(15, 3 + consecutive_empty * 2)
+            print(f"  API busy (consecutive fails: {consecutive_empty}) - waiting {wait_s}s before retrying...", flush=True)
+            _time.sleep(wait_s)
             continue
         all_turns.extend(batch)
         consecutive_empty = 0
-        print(f"  Script progress: {len(all_turns)}/{TARGET} turns")
+        print(f"  Script progress: {len(all_turns)}/{TARGET} turns", flush=True)
         if len(all_turns) < TARGET:
-            _time.sleep(2)
+            _time.sleep(1)
 
     all_turns = all_turns[:TARGET]
 
-    if len(all_turns) < 30:
-        print("  Too few turns from API, using fallback script")
-        return _fallback_script(topic_es, topic_en), topic_es, topic_en
+    if not all_turns:
+        print("  Using structured fallback script (150 unique turns)...", flush=True)
+        all_turns = _fallback_script(topic_es, topic_en, TARGET)
+    elif len(all_turns) < TARGET:
+        print(f"  Extending {len(all_turns)} turns to {TARGET} with topic conversation...", flush=True)
+        all_turns = _extend_script(all_turns, topic_es, topic_en, TARGET)
 
     # Short 2-line intro: Ivan (Host2) first, then Anna (Host1), then topic
     all_turns[0]["speaker"] = "Host2"
-    all_turns[0]["russian"] = f"Привет, я Иван. Добро пожаловать в Velocity Russian. Сегодня мы говорим о {topic_es}."
+    all_turns[0]["russian"] = f"Привет, я Иван. Добро пожаловать в Velocity Russian. Сегодня мы говорим о **{topic_es}**."
     all_turns[0]["translit"] = romanize_russian(all_turns[0]["russian"])
     all_turns[0]["english"] = f"Hi, I'm Ivan. Welcome to Velocity Russian Podcast. Today we talk about {topic_en}."
     if len(all_turns) > 1:
@@ -661,21 +987,8 @@ def generate_script():
         all_turns[1]["translit"] = romanize_russian(all_turns[1]["russian"])
         all_turns[1]["english"] = f"Thanks, Ivan. Today's topic is very interesting. Let's start."
 
-    print(f"  Script: {len(all_turns)} turns, topic: {topic_es}")
+    print(f"  Script: {len(all_turns)} turns, topic: {topic_es}", flush=True)
     return all_turns, topic_es, topic_en
-
-
-def _fallback_script(topic_es, topic_en):
-    turns = []
-    for i in range(150):
-        s = "Host2" if i % 2 == 0 else "Host1"
-        if s == "Host2":
-            rus = f"Привет, я Иван. Поговорим о **будущем** и о {topic_es}."
-            turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Hi, I'm Ivan. Let's talk about the future and {topic_en}."})
-        else:
-            rus = f"Хорошая идея, Иван. {topic_es} очень **интересно**."
-            turns.append({"speaker": s, "russian": rus, "translit": romanize_russian(rus), "english": f"Good idea Ivan. {topic_en} is very interesting."})
-    return turns
 
 
 async def generate_audio(turns, target_dir=None):
