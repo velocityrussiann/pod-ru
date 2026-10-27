@@ -1,0 +1,70 @@
+name: Probe RU TTS voices on runner
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install edge-tts
+
+      - name: Run RU probe
+        run: |
+          python - <<'EOF'
+          import asyncio, json
+          import edge_tts
+          print("edge_tts version:", edge_tts.__version__, flush=True)
+          results = {}
+
+          async def try_case(label, voice, text):
+              try:
+                  c = edge_tts.Communicate(text, voice, boundary="WordBoundary")
+                  audio = bytearray()
+                  bounds = 0
+                  async with asyncio.timeout(40):
+                      async for chunk in c.stream():
+                          if chunk.get("type") == "audio":
+                              audio.extend(chunk.get("data", b""))
+                          elif chunk.get("type") == "WordBoundary":
+                              bounds += 1
+                  open(f"ru_{label}.mp3", "wb").write(bytes(audio))
+                  results[label] = {"ok": True, "bytes": len(audio), "bounds": bounds}
+                  print(f"{label}: OK bytes={len(audio)} bounds={bounds}", flush=True)
+              except Exception as e:
+                  results[label] = {"ok": False, "error": f"{type(e).__name__}: {str(e)[:200]}"}
+                  print(f"{label}: FAIL {type(e).__name__} {str(e)[:200]}", flush=True)
+
+          async def main():
+              cyr = "Привет, я говорю по-русски. Сегодня мы обсуждаем путешествия."
+              lat = "Privet, ya govoryu po-russki. Segodnya my obsuzhdaem puteshestviya."
+              await try_case("svetlana_cyr", "ru-RU-SvetlanaNeural", cyr)
+              await try_case("dmitry_cyr", "ru-RU-DmitryNeural", cyr)
+              await try_case("dariya_cyr", "ru-RU-DariyaNeural", cyr)
+              await try_case("svetlana_lat", "ru-RU-SvetlanaNeural", lat)
+
+          asyncio.run(main())
+          json.dump(results, open("probe_results.json", "w"), indent=1)
+          print("RESULTS:", json.dumps(results), flush=True)
+          EOF
+
+      - name: Upload probe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ru-probe-${{ github.run_number }}
+          path: |
+            probe_results.json
+            ru_*.mp3
+          retention-days: 7
