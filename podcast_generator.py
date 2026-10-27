@@ -998,6 +998,21 @@ def configure_edge_tts():
 
 
 
+def _select_edge_endpoint(voice):
+    """Per-voice Edge endpoint: Dmitry is served only via api.msedgeservices.com."""
+    import edge_tts.constants
+    import edge_tts.communicate
+    if voice == "ru-RU-DmitryNeural":
+        token = getattr(edge_tts.constants, "TRUSTED_CLIENT_TOKEN", "6A5AA1D4EAFF4E9FB37E23D68491D6F4")
+        url = ("wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1"
+               f"?Ocp-Apim-Subscription-Key={token}")
+    else:
+        url = ("wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1"
+               "?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4")
+    edge_tts.constants.WSS_URL = url
+    edge_tts.communicate.WSS_URL = url
+
+
 async def generate_audio(turns, target_dir=None):
     configure_edge_tts()
     import edge_tts
@@ -1014,6 +1029,7 @@ async def generate_audio(turns, target_dir=None):
         for attempt in range(3):
             try:
                 configure_edge_tts()
+                _select_edge_endpoint(voice)
                 communicate = edge_tts.Communicate(spoken_text, voice, boundary="WordBoundary")
                 _bounds = []
                 _chunks = bytearray()
