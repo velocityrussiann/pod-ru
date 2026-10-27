@@ -1032,6 +1032,7 @@ async def generate_audio(turns, target_dir=None):
                     break
             except Exception as e:
                 print(f"  Audio {i} attempt {attempt+1}/3 failed: {e}")
+                print(f"  Audio {i} voice={voice} chars={len(spoken_text)} head={spoken_text[:120]!r}")
                 if attempt == 0:
                     print(f"  Audio {i} waiting 15s before retry...")
                     await asyncio.sleep(15.0)
